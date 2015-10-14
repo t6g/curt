@@ -1,0 +1,155 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[top=1in, bottom=1in, left=0.8in, right=0.8in]{geometry}
+
+\title{Explicit simulation of diffusion into macropores in spherical beads in fixed-bed column}
+\author{Guoping Tang}
+%\date{September 1994}
+\begin{document}
+   \maketitle
+
+\section{Problem statement}
+The advection, diffusion, and sorption of solute in a fixed-bed column can be described by 
+\begin{equation}
+\frac{\partial (1 + k_p) c}{\partial t} = - vc + (D_e + \lambda v) \frac{\partial^2 c}{\partial x^2} + \sum \frac{D}{r^2}\frac{\partial }{\partial
+r}\left(r^2\frac{\partial c}{\partial r}\right), 
+\label{eq:ade}
+\end{equation}
+with initial concentration 
+\begin{equation}
+c(x, r, t=0) = 0,
+\end{equation}
+and boundary conditions
+\begin{equation}
+c(x=0, r = 0,t) = c_0,
+\end{equation}
+and
+\begin{equation}
+\frac{\partial c}{\partial x} (x=L, r=0,t) = 0.
+\end{equation}
+Here $c$ is the aqueous concentration; $k_p$ is the partition coefficient (dissolved vs. sorbed concentration, 0 in the mobile fraction); $v$ is the advection velocity; $D_e$ is the effective diffusion coefficient; $\lambda$ is the dispersivity; $x$ is the distance from the inlet; $r$ is the distance from the outer surface into the sphere; $L$ is the length of the column, and $\sum$ denotes the summation of the beads in a unit volume. 
+
+\section{Numerical solution}
+\subsection{Finite difference formulae}
+Discretizing the column in $x$ direction into $n_x$ uniform cells and the sphere into $n_r$  cells, the numerical grid cells are numbered from the $n_x$ column cells first, starting from inlet to the outlet, and then from the outer to the center of the sphere cells. The total number of grid cells is $n_x(n_r + 1)$. Suppose that a column is filled with $V_b$ spherical resin beads of uniform radius $R_b$, the number of beads in a column grid cell is
+\begin{equation}
+n_b = \frac{3V_b}{4\pi R_b^3n_x} .
+\end{equation}
+Using upwind for advection and center difference for diffusion, mass balance equation for the first cell is
+\begin{equation}
+\frac{\partial c_1}{\partial t}\theta_m A \Delta x = v\theta_m A(c_0 - c_1) + \frac{(D_e+\lambda v )\theta_m A}{\Delta x} \left(c_0 -2 c_1 + c_2\right) + n_b D_e \frac{\theta_bA_1}{0.5\Delta r_1} (c_{n_x+1} - c_1).
+\end{equation}
+Here $\theta_m$ is the mobile water content; $A=\pi R_c^2$ is the column section area; $\theta_b$  is the volumetric water content of the macroporous resin; $A_1$ is the surface area of a bead, and $\Delta r_1$ is the distance from the outer surface to the inner surface of the first grid cell in the sphere. For a column with radius $R_c$ that is filled with $V_b$ resin, $\theta_m = 1 - V_b/V_c$, with $V_c = AL$. Dividing both sides by $\theta_mA\Delta x = \theta_m \Delta V$, 
+\begin{equation}
+\frac{\partial c_1}{\partial t}= \frac{v}{\Delta x}(c_0 - c_1) + \frac{(D_e+\lambda v )}{\Delta x^2} \left(c_0 -2 c_1 + c_2\right) + \frac{n_b \theta_b D_e A_1}{\Delta V \theta_m 0.5\Delta r_1} (c_{n_x+1} - c_1).
+\end{equation}
+Denote 
+\begin{equation}
+\alpha = \frac{v \Delta t}{\Delta x},
+\end{equation}
+\begin{equation}
+\beta = \frac{(D_e + \lambda v) \Delta t}{\Delta x^2}, 
+\end{equation}
+and
+\begin{equation}
+\gamma = \frac{n_b\theta_b}{\Delta V \theta_m}\frac{D_eA_1\Delta t}{0.5\Delta r_1} =  \frac{n_b\theta_b}{\Delta V \theta_m}\eta_1,
+\end{equation}
+and use the backward Euler method for time discretization with $\Delta t$ as the time step size from time step $k$ to $k+1$, it reduces to
+\begin{equation}
+(1 + \alpha + 2 \beta + \gamma) c_1^{k+1}  - \beta c_2^{k+1} - \gamma c_{n_x+1}^{k+1} = c_1^k + (\alpha + \beta) c_0.
+\end{equation}
+For the second cell in the column, 
+\begin{equation}
+-(\alpha + \beta)c_1^{k+1}  + (1 +  \alpha + 2 \beta + \gamma ) c_2^{k+1}  - \beta c_3^{k+1}- \gamma c_{n_x+2}^{k+1} =  c_2^k .
+\end{equation}
+For the last cell in the column,
+\begin{equation}
+-(\alpha + \beta)c_{n_x-1}^{k+1}  + (1 +  \alpha + \beta + \gamma ) c_{n_x}^{k+1}  - \gamma c_{n_x+n_r}^{k+1} =  c_{n_x}^k,
+\end{equation}
+as the zero concentration gradient outlet boundary condition is implemented with $c_{n_x} = c_{n_x+1}$ by adding a hypothetical extra grid cell \cite{Zheng2002}.
+
+For the outer grid cell in the sphere, the mass conservation equation is
+\begin{equation}
+\frac{\partial c_{n_x+1}}{\partial t}\theta_b\Delta V_1 (1 + k_p) =  \theta_b A_1D_e \frac{c_1 - c_{n_x+1}}{0.5\Delta r_1} +  \theta_b A_2D_e \frac{c_{2n_x+1} - c_{n_x+1}}{0.5(\Delta r_1 + \Delta r_2)}.
+\end{equation}
+Denote 
+\begin{equation}
+\omega_i = \frac{1}{\Delta V_i (1+k_p)},
+\end{equation}
+\begin{equation}
+\eta_i = \frac{D_eA_i\Delta t}{\Delta R_i}, 
+\end{equation}
+with $\Delta R_i = 0.5\Delta r_1$ for the outer grid cell, $\Delta R_i = 0.5 (\Delta r_i + \Delta r_{i+1})$ for the intermediate grid cells, and $\Delta R_i = 0.5 \Delta r_{n_r}$ for the grid cell at the center of the sphere. 
+Use the same backward Euler method for time discretization, it simplifies to
+\begin{equation}
+-\omega_1 \eta_1 c_1^{k+1}  + (1 + \omega_1\eta_1 + \omega_1\eta_2) c_{n_x+1}^{k+1} -  \omega_1 \eta_2 c_{2n_x+1}^{k+1} =   c_{n_x+1}^{k}.
+\end{equation}
+For the second grid cell in the sphere,
+\begin{equation}
+-\omega_2 \eta_2 c_{n_x+1}^{k} + (1 + \omega_2 \eta_2 + \omega_2 \eta_3)  c_{2n_x+1}^{k+1} -  \omega_2 \eta_3 c_{3n_x+1}^{k+1}=  c_{2n_x+1}^{k}.
+\end{equation}
+For the grid cell in the center of the sphere,
+\begin{equation}
+-\omega_{n_r} \eta_{n_r} c_{n_x(n_r-1)+1}^{k} +  (1 + \omega_{n_r} \eta_{n_r}) c_{n_xn_r+1}^{k+1} =  c_{n_xn_r+1}^{k}.
+\end{equation}
+
+\subsection{Matrix equation}
+Assemble these equations into a matrix equation,
+\begin{equation}
+\mathbf{A}\mathbf{x}=\mathbf{b}
+\end{equation}
+
+For the first row, $\mathbf{A}(1, 1) = 1 + \alpha + 2 \beta + \gamma$, $\mathbf{A}(1, 2) = -\beta$,  $\mathbf{A}(1, n_x+1) = -\gamma$, and $\mathbf{b}(1) = c_1^k + (\alpha+\beta)c_0$.   
+From the second row to the second last row in the column ($i=2$ to $n_x-1$),  $\mathbf{A}(i, i-1) = -\alpha - \beta$, $\mathbf{A}(i, i) = 1 + \alpha + 2 \beta + \gamma$, $\mathbf{A}(i, i+1) = - \beta$,  $\mathbf{A}(i, n_x+i) = -\gamma$, and $\mathbf{b}(i) = c_i^k$. 
+For $i = n_x$ starting from the outer sphere grid cell, $\mathbf{A}(i, i-1) = -\alpha - \beta$, $\mathbf{A}(i, i) = 1 + \alpha + \beta + \gamma$,  $\mathbf{A}(i, n_r+i) = -\gamma$, and $\mathbf{b}(i) = c_i^k$.
+For $i >n_x$ and $\leq n_x\times n_r$, $\mathbf{A}(i, i-n_x) = -\omega_j \eta_j $, $\mathbf{A}(i, i) = 1 + \omega_j \eta_j + \omega_j \eta_{j+1} $,  $\mathbf{A}(i, i + n_r) = -\omega_j \eta_{j+1}$, and $\mathbf{b}(i) = c_i^k$. Where $j = i\%n_r$ (remainder if $i/n_r$ in c).
+For $i >n_xn_r$ , $\mathbf{A}(i, i-n_x) = -\omega_j \eta_j $, $\mathbf{A}(i, i) = 1 + \omega_j \eta_j $,  and $\mathbf{b}(i) = c_i^k$. 
+This is summarized in Table \ref{tab:assembly}.
+\noindent
+\begin{table}[H]
+\label{tab:assembly}
+\caption{Matrix assembly ($k=j\%n_x$)}
+\begin{tabular}{ c | cccc | cccc }
+\hline
+Row & \multicolumn{4}{c|}{Entries} & \multicolumn{4}{c}{Column} \\
+\hline
+1 & $1+\alpha +2\beta+\gamma$      & $-\beta$ & $-\gamma$ & & 1 & 2 & $n_x+1$ & \\
+i  & $-\alpha-\beta$ & $1+\alpha +2\beta+\gamma$      & $-\beta$ & $-\gamma$ & i-1 & i & i+1 & $n_x+i$ \\
+$n_x$ & $-\alpha-\beta$ & $1+\alpha +\beta+\gamma$      & $-\gamma$ & & $n_x-1$ & $n_x$ & $n_x+n_r$ \\
+\hline
+$n_x+1$ & $-\omega_1\eta_1$ & $1+\omega_1\eta_1+\omega_1\eta_2$  & $-\omega_1\eta_2$    &   & 1 & $n_x+1$ & $2n_x+1$ &  \\
+$j$ & $-\omega_k\eta_k$ & $1+\omega_k(\eta_k+\eta_{k+1})$  & $-\omega_k\eta_{k+1}$    &   & $j-n_x$ & j & $n_x+j$ &  \\
+$n_xn_r$ & $-\omega_{n_r}\eta_{n_r}$ & $1+\omega_{n_r}(\eta_{n_r}+\eta_{n_r+1})$  & $-\omega_{n_r}\eta_{n_r+1}$    &   & $n_x(n_r-1)$ & $n_xn_r$ & $n_x(n_r+1)$ &  \\
+\hline
+$n_xn_r+1$ & $-\omega_{n_r}\eta_{n_r}$ & $1+\omega_{n_r}\eta_{n_r}$  &  &   & $n_x(n_r-1)+1$ & $n_xn_r+1$ & &  \\
+$n_xn_r+l$ & $-\omega_{n_r}\eta_{n_r}$ & $1+\omega_{n_r}\eta_{n_r}$  &  &   & $n_x(n_r-1)+l$ & $n_xn_r+l$ & &  \\
+$n_x(n_r+1)$ & $-\omega_{n_r}\eta_{n_r}$ & $1+\omega_{n_r}\eta_{n_r}$  &  &   & $n_xn_r+1$ & $n_x(n_r+1)$ &  &  \\
+\hline
+\end{tabular}
+\end{table}
+\subsection{Discretization of the sphere}
+The sphere can be discretized with uniform distance or volume. For the latter, the radius values follow
+\begin{equation}
+\frac{4\pi r_i^3}{3} - \frac{4\pi (r_i-\Delta r_i)^3}{3} = \frac{4\pi R_b^3}{3n_r}.
+\end{equation}
+The $r_i$ and $\Delta r_i$ are calculated by
+\begin{equation}
+\Delta r_i = r_i - (r_i^3 - R_b^3/n_r)^{1/3},
+\end{equation}
+starting from $r_1 = R_b$.
+
+\subsection{Accuracy}
+The backward Euler method makes the solution unconditionally stable.
+For the upwind for advection, center difference for diffusion, and backward difference for time, the numerical diffusion coefficient
+\begin{equation}
+\frac{D_n}{D_0} = 0.5 P_e (1 + \alpha),
+\end{equation}
+with the Peclet number $P_e=\frac{v \Delta t}{D_e+v\lambda}$, and $D_0$ as the free water molecular diffusion coefficient. A Courant number less than 1, and a small Peclet number is needed for accuracy. The numerical diffusion coefficient can be subtracted from the physical diffusion coefficient to increase accuracy.
+
+\bibliography{cxrt}{}
+\bibliographystyle{plain}
+
+\end{document}
+
+
