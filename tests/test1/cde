@@ -1,0 +1,15 @@
+../../src/cxrt \
+     -prefix cde \
+     -length 5.0 \
+     -diffusioncoefficient 0.1 \
+     -dispersivity 0.0 \
+     -flowrate 12.0 \
+     -simulationduration 20.0 \
+     -nx 1000 \
+     -nr 5 \
+     -volumeresin 0.0 \
+     -DfD0 0.0 \
+     -DeD0column 1.0 \
+     -cfl 1.0 \
+     -nocorrectnumericaldiffusion true \
+     -noutput 100
