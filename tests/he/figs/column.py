@@ -64,4 +64,4 @@ plt.plot(xx, c0, 'b-', xx, c1, 'r-', xx, c2, 'g-', xx, c3, 'm-', xx, c4, 'c-', x
 fig = plt.gcf()
 fig.set_size_inches(6, 4.5)
 plt.savefig('column_%d_%d.png'%(nx, nr))
-#plt.show()
+plt.show()
