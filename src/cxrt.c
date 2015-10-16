@@ -152,7 +152,7 @@ int main(int argc,char **args)
     ierr = SETERRQ(PETSC_COMM_WORLD, 1, "beta  < 0!, too big numerical dispersion!"); CHKERRQ(ierr);
   } 
   */ 
-  ierr = VecCreateSeq(PETSC_COMM_SELF, nrt, &eta); CHKERRQ(ierr);
+  ierr = VecCreateSeq(PETSC_COMM_SELF, nr, &eta); CHKERRQ(ierr);
   ierr = VecSetFromOptions(eta);
   ierr = VecDuplicate(eta, &sphere_cell_dvol); CHKERRQ(ierr);
 
