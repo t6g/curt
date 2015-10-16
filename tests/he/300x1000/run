@@ -5,10 +5,10 @@
 # 3.0 bv/min = 3.0 * 15 / 60 / 0.65 = 1.1538
 # 4.0 bv/min = 4.0 * 15 / 60 / 0.65 = 1.5385
 # 5.0 bv/min = 5.0 * 15 / 60 / 0.65 = 1.9231
-../../../src/cxrt -prefix bv02 -velocity 0.0769 -simulationduration 900.0 -nx 300 -nr 1000 
-../../../src/cxrt -prefix bv04 -velocity 0.1538 -simulationduration 450.0 -nx 300 -nr 1000 -restart bv02_300_1000_restart.h5 
-../../../src/cxrt -prefix bv10 -velocity 0.3846 -simulationduration 180.0 -nx 300 -nr 1000 -restart bv04_300_1000_restart.h5 
-../../../src/cxrt -prefix bv20 -velocity 0.7692 -simulationduration  90.0 -nx 300 -nr 1000 -restart bv10_300_1000_restart.h5 
-../../../src/cxrt -prefix bv30 -velocity 1.1538 -simulationduration  60.0 -nx 300 -nr 1000 -restart bv20_300_1000_restart.h5 
-../../../src/cxrt -prefix bv40 -velocity 1.5385 -simulationduration  45.0 -nx 300 -nr 1000 -restart bv30_300_1000_restart.h5 
-../../../src/cxrt -prefix bv50 -velocity 1.9231 -simulationduration  36.0 -nx 300 -nr 1000 -restart bv40_300_1000_restart.h5 
+mpiexec -np 12 ../../../src/cxrt -prefix bv02 -velocity 0.0769 -simulationduration 900.0 -nx 300 -nr 1000 
+mpiexec -np 12 ../../../src/cxrt -prefix bv04 -velocity 0.1538 -simulationduration 450.0 -nx 300 -nr 1000 -restart bv02_300_1000_restart.h5 
+mpiexec -np 12 ../../../src/cxrt -prefix bv10 -velocity 0.3846 -simulationduration 180.0 -nx 300 -nr 1000 -restart bv04_300_1000_restart.h5 
+mpiexec -np 12 ../../../src/cxrt -prefix bv20 -velocity 0.7692 -simulationduration  90.0 -nx 300 -nr 1000 -restart bv10_300_1000_restart.h5 
+mpiexec -np 12 ../../../src/cxrt -prefix bv30 -velocity 1.1538 -simulationduration  60.0 -nx 300 -nr 1000 -restart bv20_300_1000_restart.h5 
+mpiexec -np 12 ../../../src/cxrt -prefix bv40 -velocity 1.5385 -simulationduration  45.0 -nx 300 -nr 1000 -restart bv30_300_1000_restart.h5 
+mpiexec -np 12 ../../../src/cxrt -prefix bv50 -velocity 1.9231 -simulationduration  36.0 -nx 300 -nr 1000 -restart bv40_300_1000_restart.h5 

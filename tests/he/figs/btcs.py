@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 import h5py as h5py
 import sys as sys
 
-def readh5file(nx, nr):
+def readh5file(directory, nx, nr):
   cc  = []
   tt  = []
   t0  = 0.0
 
-  f0  = h5py.File('bv02_%d_%d.h5'%(nx, nr), 'r')
+  f0  = h5py.File(directory + 'bv02_%d_%d.h5'%(nx, nr), 'r')
 
   for i in f0.keys():
     cc.append(f0[i][:, 0][nx-1])
@@ -18,7 +18,7 @@ def readh5file(nx, nr):
   f0.close()
 
   t0 = max(tt)
-  f0 = h5py.File('bv04_%d_%d.h5'%(nx, nr), 'r')
+  f0 = h5py.File(directory + 'bv04_%d_%d.h5'%(nx, nr), 'r')
 
   for i in f0.keys():
     cc.append(f0[i][:, 0][nx-1])
@@ -27,7 +27,7 @@ def readh5file(nx, nr):
   f0.close()
 
   t0 = max(tt)
-  f0 = h5py.File('bv10_%d_%d.h5'%(nx, nr), 'r')
+  f0 = h5py.File(directory + 'bv10_%d_%d.h5'%(nx, nr), 'r')
 
   for i in f0.keys():
     cc.append(f0[i][:, 0][nx-1])
@@ -36,7 +36,7 @@ def readh5file(nx, nr):
   f0.close()
 
   t0 = max(tt)
-  f0 = h5py.File('bv20_%d_%d.h5'%(nx, nr), 'r')
+  f0 = h5py.File(directory + 'bv20_%d_%d.h5'%(nx, nr), 'r')
 
   for i in f0.keys():
     cc.append(f0[i][:, 0][nx-1])
@@ -45,7 +45,7 @@ def readh5file(nx, nr):
   f0.close()
 
   t0 = max(tt)
-  f0 = h5py.File('bv30_%d_%d.h5'%(nx, nr), 'r')
+  f0 = h5py.File(directory + 'bv30_%d_%d.h5'%(nx, nr), 'r')
 
   for i in f0.keys():
     cc.append(f0[i][:, 0][nx-1])
@@ -54,7 +54,7 @@ def readh5file(nx, nr):
   f0.close()
 
   t0 = max(tt)
-  f0 = h5py.File('bv40_%d_%d.h5'%(nx, nr), 'r')
+  f0 = h5py.File(directory + 'bv40_%d_%d.h5'%(nx, nr), 'r')
  
   for i in f0.keys():
     cc.append(f0[i][:, 0][nx-1])
@@ -63,7 +63,7 @@ def readh5file(nx, nr):
   f0.close()
 
   t0 = max(tt)
-  f0 = h5py.File('bv50_%d_%d.h5'%(nx, nr), 'r')
+  f0 = h5py.File(directory + 'bv50_%d_%d.h5'%(nx, nr), 'r')
 
   for i in f0.keys():
     cc.append(f0[i][:, 0][nx-1])
@@ -77,21 +77,17 @@ def readh5file(nx, nr):
 
   return res
 
-if(len(sys.argv) > 1):
-  nx = int(sys.argv[1])
-  nr = int(sys.argv[2])
-else:
-  nx = 150
-  nr  = 100
-
 cin = 1.9941e-07;
+c1 = readh5file('../150x100/', 150, 100)
+c2 = readh5file('../300x1000/', 300, 1000)
+c3 = readh5file('../600x2000/', 600, 2000)
 
-cc = readh5file(nx, nr)
-plt.plot(cc['t']/60.0, cc['c']/cin, 'b-')
+
+plt.semilogy(c1['t']/60.0, c1['c']/cin, 'b-', c2['t']/60.0, c2['c']/cin, 'r-', c3['t']/60.0, c3['c']/cin, 'g-')
 plt.xlabel('Time (min)')
 plt.ylabel('c/c$_0$')
 
 fig = plt.gcf()
 fig.set_size_inches(6, 4.5)
-plt.savefig('btc_%d_%d.png'%(nx, nr))
+plt.savefig('btc.png')
 plt.show()
