@@ -37,7 +37,7 @@ def Ogata_Banks(x, t, v, D):
               math.exp(x * v / D) * math.erfc((x + v * t)/2.0 / math.sqrt(D * t)))
   return c
 
-r1 = readh5file('cde_10_5.h5', 10, 5)
+r1 = readh5file('cde_20_5.h5', 20, 5)
 r2 = readh5file('cde_100_5.h5', 100, 5)
 r3 = readh5file('cde_1000_5.h5', 1000, 5)
 

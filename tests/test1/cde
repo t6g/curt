@@ -4,10 +4,10 @@
      -diffusioncoefficient 0.1 \
      -dispersivity 0.0 \
      -velocity 1.0 \
-     -nx 20 \
+     -nx 1000 \
      -nr 5 \
-     -nt 80 \
-     -noutput 80 \
+     -nt 4000 \
+     -noutput 100 \
      -DfD0 0.0 \
      -DeD0column 1.0 \
      -simulationduration 20.0
