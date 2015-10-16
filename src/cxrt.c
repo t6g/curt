@@ -4,13 +4,13 @@ static char help[] = "Solves one dimensional advection diffusion equation    \n\
   Input parameters include:                                                  \n\
     -length                      : column length, cm                         \n\
     -diameter                    : column diameter, cm                       \n\
+    -velocity                    : cm/s                                      \n\
     -dispersivity                : cm                                        \n\
     -diffusioncoefficient        : D0, cm2/s                                 \n\
     -DeD0                        : pore diffusion over D0                    \n\
     -DfD0                        : film diffusion over D0                    \n\
     -inletconcentration          : inlet concentration                       \n\
     -initialconcentrationcolumn  : initial concentration                     \n\
-    -flowrate                    : bed volume / min                          \n\
                                                                                \
     -radiusresin                 : cm                                        \n\
     -volumeresin                 : resin volume, cm^3                        \n\
@@ -18,14 +18,15 @@ static char help[] = "Solves one dimensional advection diffusion equation    \n\
     -kp                          : partition coefficient c/s                 \n\
                                                                                \
     -nx                          : number of cells in flow direction         \n\
-    -nr                          : number of cells in the sphere             \n\
+    -nr                          : number of cells in the sphere for calc.   \n\
+    -nt                          : number of time steps                      \n\
     -noutput                     : number of outputs for all concentrations  \n\
                                                                                \
     -cfl                         : Courant-Friedichs-Lewy (for accuracy)     \n\
     -simulationduration          : s                                         \n\
     -equalvolume                 : for sphere discretization                 \n\
     -displaymatrix               :                                           \n\
-    -nocorrectnumericaldiffusion :                                        \n\n"; 
+    -correctnumericaldiffusion   :                                        \n\n"; 
 
 #include <petscksp.h>
 #include <petscsys.h>
@@ -56,11 +57,10 @@ int main(int argc,char **args)
   PetscReal cin           = 1.9941e-7;/* inlet concentration M */
   PetscReal cinit         = 0.0;      /* initial concentration in column  */
 
-  PetscReal flowrate      = 0.2;      /* bv/min */ 
   PetscReal cfl_limiter   = 0.2;      /* limit cfl to determine dt for accuracy */        
   PetscReal sim_duration  = 900.0; 
 
-  PetscBool nocorrect_nd = PETSC_FALSE; /* correct numerical diffusion */ 
+  PetscBool correct_nd = PETSC_FALSE; /* correct numerical diffusion */ 
   PetscBool equalvolume  = PETSC_FALSE;
   PetscBool displaymatrix = PETSC_FALSE;
 
@@ -90,7 +90,7 @@ int main(int argc,char **args)
   PetscBool      flg;
   char str[80], filename[80], prefix[80]="base";
   char restart_filename[80]="";
-  PetscInt       nt, iout, nto, ntout=10;
+  PetscInt       nt=900, iout, nto, ntout=10;
 
   PetscInitialize(&argc,&args,(char*)0,help);
 
@@ -107,7 +107,7 @@ int main(int argc,char **args)
   ierr = PetscOptionsGetReal(NULL,"-inletconcentration", &cin, NULL); CHKERRQ(ierr);
   ierr = PetscOptionsGetReal(NULL,"-initialconcentration", &cinit, NULL); CHKERRQ(ierr);
   ierr = PetscOptionsGetReal(NULL,"-kp", &kp, NULL); CHKERRQ(ierr);
-  ierr = PetscOptionsGetReal(NULL,"-flowrate", &flowrate, NULL); CHKERRQ(ierr);
+  ierr = PetscOptionsGetReal(NULL,"-velocity", &velocity, NULL); CHKERRQ(ierr);
 
   ierr = PetscOptionsGetReal(NULL,"-radiusresin", &radius_resin, NULL); CHKERRQ(ierr);
   ierr = PetscOptionsGetReal(NULL,"-volumeresin", &volume_resin, NULL); CHKERRQ(ierr);
@@ -115,13 +115,14 @@ int main(int argc,char **args)
 
   ierr = PetscOptionsGetInt(NULL, "-nx", &nx, NULL);CHKERRQ(ierr);
   ierr = PetscOptionsGetInt(NULL, "-nr", &nr, NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsGetInt(NULL, "-nt", &nt, NULL);CHKERRQ(ierr);
   ierr = PetscOptionsGetInt(NULL, "-noutput", &ntout, NULL);CHKERRQ(ierr);
 
   ierr = PetscOptionsGetReal(NULL,"-cfl", &cfl_limiter, NULL); CHKERRQ(ierr);
 
   ierr = PetscOptionsGetReal(NULL,"-simulationduration",&sim_duration,NULL); CHKERRQ(ierr);
 
-  ierr = PetscOptionsGetBool(NULL,"-nocorrectnumericaldiffusion",&nocorrect_nd,NULL); CHKERRQ(ierr);
+  ierr = PetscOptionsGetBool(NULL,"-correctnumericaldiffusion",&correct_nd,NULL); CHKERRQ(ierr);
 
   ierr = PetscOptionsGetBool(NULL,"-equalvolume",&equalvolume,NULL); CHKERRQ(ierr);
 
@@ -131,8 +132,7 @@ int main(int argc,char **args)
 
   theta_m = 1.0 - volume_resin / (PETSC_PI * diameter * diameter / 4.0 * length); 
 
-  velocity = flowrate * length / 60.0 / theta_m;
-  dt = length / ((float) nx) / velocity * cfl_limiter;
+  dt = sim_duration / ((float)nt);
 
   alpha = velocity * dt / dx; 
 
@@ -140,13 +140,19 @@ int main(int argc,char **args)
   DnDe  = 0.5 * Pe * (1.0 + alpha); 
 
   PetscPrintf(PETSC_COMM_WORLD, "velocity = %10.3f, dx = %10.3f, dt = %10.3f\n", velocity, dx, dt);
+  PetscPrintf(PETSC_COMM_WORLD, "D0 = %10.3e, De/D0column = %10.3f, De/D0sphere = %10.3f Df/D0 = %10.3f\n", diffusioncoef, ded0_column, ded0_sphere, dfd0);
   PetscPrintf(PETSC_COMM_WORLD, "Pe = %10.3f, Cr = %10.3f, Dn/De = %10.3f\n", Pe, alpha, DnDe);
 
   beta  = (diffusioncoef * ded0_column + dispersivity * velocity) * dt / dx / dx;
 
-  if (!nocorrect_nd) beta = beta * (1.0 - DnDe);
+  if (correct_nd) beta = beta * (1.0 - DnDe);
 
-  ierr = VecCreateSeq(PETSC_COMM_SELF, nr, &eta); CHKERRQ(ierr);
+  /*
+  if (beta < 0.0) {
+    ierr = SETERRQ(PETSC_COMM_WORLD, 1, "beta  < 0!, too big numerical dispersion!"); CHKERRQ(ierr);
+  } 
+  */ 
+  ierr = VecCreateSeq(PETSC_COMM_SELF, nrt, &eta); CHKERRQ(ierr);
   ierr = VecSetFromOptions(eta);
   ierr = VecDuplicate(eta, &sphere_cell_dvol); CHKERRQ(ierr);
 
@@ -205,12 +211,12 @@ int main(int argc,char **args)
   ierr = VecAssemblyEnd(eta); CHKERRQ(ierr);
   ierr = VecAssemblyEnd(sphere_cell_dvol); CHKERRQ(ierr);
  
-/* 
+  /*
   PetscPrintf(PETSC_COMM_WORLD, "alpha = %10.3f, beta = %10.3f, gamma = %10.3f\n", alpha, beta, gamma);
   
   ierr = VecView(eta,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
   ierr = VecView(sphere_cell_dvol,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-*/  
+  */
 
   /* now that alpha, beta, gamma, and eta are ready for matrix assembly */
 
@@ -269,7 +275,7 @@ int main(int argc,char **args)
       col[1] = Ii;
       col[2] = Ii + nx;
       val[0] = -1.0 * eta_p[j] / vol_p[j] / (1.0 + kp);
-      val[2] = -1.0 * eta_p[j+1] / vol_p[j+1] / (1.0 + kp);
+      val[2] = -1.0 * eta_p[j+1] / vol_p[j] / (1.0 + kp);
       val[1] = 1.0 - val[0] - val[2];
       ierr = MatSetValues(A, 1, &Ii, 3, col, val, INSERT_VALUES);CHKERRQ(ierr); 
     }

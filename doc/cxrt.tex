@@ -147,6 +147,13 @@ For the upwind for advection, center difference for diffusion, and backward diff
 \end{equation}
 with the Peclet number $P_e=\frac{v \Delta t}{D_e+v\lambda}$, and $D_0$ as the free water molecular diffusion coefficient. A Courant number less than 1, and a small Peclet number is needed for accuracy. The numerical diffusion coefficient can be subtracted from the physical diffusion coefficient to increase accuracy.
 
+\section{Tests}
+\subsection{Advection dispersion equation--Ogata-Banks}
+\begin{equation}
+\frac{c}{c_0} = \frac{1}{2}\left[erfc\left(\frac{x-vt}{2\sqrt{Dt}}\right) - \exp\left(\frac{xv}{D}\right)erfc\left(\frac{x+vt}{2\sqrt{Dt}}\right)\right]
+\end{equation}
+
+
 \bibliography{cxrt}{}
 \bibliographystyle{plain}
 
