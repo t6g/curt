@@ -1,0 +1,17 @@
+../../../src/cxrt \
+     -prefix sde \
+     -nx 5 \
+     -nr 10000 \
+     -nt 200 \
+     -velocity 50.0 \
+     -diffusioncoefficient 1.0e-6 \
+     -DfD0 1.0 \
+     -DeD0sphere 1.0 \
+     -inletconcentration 1.0 \
+     -initialconcentration 1.0 \
+     -simulationduration 200.0 \
+     -kp 2.5e5 \
+     -equalvolume true \
+     -noutput 20
+
+# vary nr from 10, 20, to 100

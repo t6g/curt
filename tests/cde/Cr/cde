@@ -1,0 +1,27 @@
+../../../src/cxrt \
+     -prefix cde1 \
+     -length 5.0 \
+     -diffusioncoefficient 0.01 \
+     -dispersivity 0.0 \
+     -velocity 1.0 \
+     -nx 500 \
+     -nr 5 \
+     -nt 100 \
+     -noutput 100 \
+     -DfD0 0.0 \
+     -DeD0column 1.0 \
+     -simulationduration 10.0
+
+
+# case 1 nx = 500, nt = 100, noutput = 100
+#Pe = v * dx / (De + v alpha) = 1 * 0.01 / (0.01 + 0) = 1.0
+#Cr = v * dt / dx = 1 * 0.1 / 0.01 = 10.0
+
+# case 2 nx = 500, nt = 1000, noutput = 100
+#Pe = v * dx / (De + v alpha) = 1 * 0.01 / (0.01 + 0) = 1.0
+#Cr = v * dt / dx = 1 * 0.01 / 0.01 = 1.0
+
+# case 3 nx = 500, nt = 10000, noutput = 100
+#Pe = v * dx / (De + v alpha) = 1 * 0.01 / (0.01 + 0) = 1.0
+#Cr = v * dt / dx = 1 * 0.001 / 0.01 = 0.1
+

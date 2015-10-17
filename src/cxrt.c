@@ -26,6 +26,7 @@ static char help[] = "Solves one dimensional advection diffusion equation    \n\
     -simulationduration          : s                                         \n\
     -equalvolume                 : for sphere discretization                 \n\
     -displaymatrix               :                                           \n\
+    -displayeta                  :                                           \n\
     -correctnumericaldiffusion   :                                        \n\n"; 
 
 #include <petscksp.h>
@@ -63,8 +64,9 @@ int main(int argc,char **args)
   PetscBool correct_nd = PETSC_FALSE; /* correct numerical diffusion */ 
   PetscBool equalvolume  = PETSC_FALSE;
   PetscBool displaymatrix = PETSC_FALSE;
+  PetscBool displayeta = PETSC_FALSE;
 
-  PetscInt  nx = 100, nr = 100;       /* number of cells in column, and sphere */          
+  PetscInt  nx = 100, nr = 100, nt = 900; /* number of cells in column, and sphere */          
   PetscReal dx, dr, dt, tt;           /*  */
   PetscReal r, area, dvol, r3n;
 
@@ -90,7 +92,7 @@ int main(int argc,char **args)
   PetscBool      flg;
   char str[80], filename[80], prefix[80]="base";
   char restart_filename[80]="";
-  PetscInt       nt=900, iout, nto, ntout=10;
+  PetscInt       iout, nto, ntout=10;
 
   PetscInitialize(&argc,&args,(char*)0,help);
 
@@ -128,6 +130,8 @@ int main(int argc,char **args)
 
   ierr = PetscOptionsGetBool(NULL,"-displaymatrix",&displaymatrix,NULL); CHKERRQ(ierr);
 
+  ierr = PetscOptionsGetBool(NULL,"-displayeta",&displayeta,NULL); CHKERRQ(ierr);
+
   dx    = length/((float)nx);
 
   theta_m = 1.0 - volume_resin / (PETSC_PI * diameter * diameter / 4.0 * length); 
@@ -162,7 +166,7 @@ int main(int argc,char **args)
   area = 4.0 * PETSC_PI * r * r;        
 
   if (equalvolume) {
-    dvol = 4.0 * PETSC_PI * r * r * r / 3.0 / ((float)nx);
+    dvol = 4.0 * PETSC_PI * r * r * r / 3.0 / ((float)nr);
     ierr = VecSet(sphere_cell_dvol, dvol); CHKERRQ(ierr);
  
     dr = r - r * pow((1.0 - 1.0 / ((float)nr)), 1.0/3.0);
@@ -210,14 +214,13 @@ int main(int argc,char **args)
   ierr = VecAssemblyBegin(sphere_cell_dvol); CHKERRQ(ierr);
   ierr = VecAssemblyEnd(eta); CHKERRQ(ierr);
   ierr = VecAssemblyEnd(sphere_cell_dvol); CHKERRQ(ierr);
- 
-  /*
-  PetscPrintf(PETSC_COMM_WORLD, "alpha = %10.3f, beta = %10.3f, gamma = %10.3f\n", alpha, beta, gamma);
-  
-  ierr = VecView(eta,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-  ierr = VecView(sphere_cell_dvol,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-  */
 
+  if (displayeta) { 
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "alpha = %10.3f, beta = %10.3f, gamma = %10.3f\n", alpha, beta, gamma); CHKERRQ(ierr);
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "eta = \n"); CHKERRQ(ierr);
+    ierr = VecView(eta,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+    ierr = VecView(sphere_cell_dvol,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  }
   /* now that alpha, beta, gamma, and eta are ready for matrix assembly */
 
   ierr = MatCreate(PETSC_COMM_WORLD,&A);CHKERRQ(ierr);
@@ -332,7 +335,7 @@ int main(int argc,char **args)
   ierr = VecDuplicate(b,&x);CHKERRQ(ierr);
 
   /* Create the HDF5 viewer for writing */
-  sprintf(filename, "%s_%d_%d.h5", prefix, nx, nr);
+  sprintf(filename, "%s_%dx%dx%d.h5", prefix, nx, nr, nt);
   ierr = PetscViewerHDF5Open(PETSC_COMM_WORLD,filename,FILE_MODE_WRITE,&viewer); CHKERRQ(ierr);
   ierr = PetscViewerSetFromOptions(viewer); CHKERRQ(ierr);
 
@@ -371,7 +374,7 @@ int main(int argc,char **args)
 
   ierr = PetscViewerDestroy(&viewer); CHKERRQ(ierr);
 
-  sprintf(filename, "%s_%d_%d_restart.h5", prefix, nx, nr);
+  sprintf(filename, "%s_%dx%d_restart.h5", prefix, nx, nr);
   ierr = PetscObjectSetName((PetscObject) x, "restart"); CHKERRQ(ierr);
   ierr = PetscViewerHDF5Open(PETSC_COMM_WORLD,filename,FILE_MODE_WRITE,&viewer); CHKERRQ(ierr);
   ierr = PetscViewerSetFromOptions(viewer); CHKERRQ(ierr);

@@ -148,10 +148,44 @@ For the upwind for advection, center difference for diffusion, and backward diff
 with the Peclet number $P_e=\frac{v \Delta t}{D_e+v\lambda}$, and $D_0$ as the free water molecular diffusion coefficient. A Courant number less than 1, and a small Peclet number is needed for accuracy. The numerical diffusion coefficient can be subtracted from the physical diffusion coefficient to increase accuracy.
 
 \section{Tests}
-\subsection{Advection dispersion equation--Ogata-Banks}
+\subsection{Advection dispersion equation}
+For first-type Dirichlet inlet boudnary condition, the analytical solution for the one dimensional convection diffusion equation is is \cite{Lapidus1952,Ogata1961}
 \begin{equation}
-\frac{c}{c_0} = \frac{1}{2}\left[erfc\left(\frac{x-vt}{2\sqrt{Dt}}\right) - \exp\left(\frac{xv}{D}\right)erfc\left(\frac{x+vt}{2\sqrt{Dt}}\right)\right]
+\frac{c-c_i}{c_0-c_i} = \frac{1}{2}\left[\mathrm{erfc}\left(\frac{x-vt}{2\sqrt{Dt}}\right) + \exp\left(\frac{xv}{D}\right)\mathrm{erfc}\left(\frac{x+vt}{2\sqrt{Dt}}\right)\right].
 \end{equation}
+Where $c_i$ and $c_0$ are the initial and inlet concentration.
+
+For length = 5, diffusion coefficient = 0.01, dispersivity = 0, we use $D_f/D_0$ = 0 to prevent diffusion into sphere, the numerical solution is compared with analytical solution in Figs. \ref{fig:test1prof} and \ref{fig:test1comp}. As the grid Peclet number decreases to below 1, the numerical solution gets close to the analytical solution. Coarse discretization results in additional numerical diffusion.
+
+\begin{figure}[htb]
+\centerline{\includegraphics[width=1.0\textwidth]{../tests/test1/comp.pdf}}
+\caption{Verification with analytical solution for advection diffusion equation: breakthrough curves. $Pe = v\Delta t/D$ is the grid Peclet number. The Courant number $Cr = v\Delta t\Delta x$ = 1.}
+\label{fig:test1comp}
+\end{figure}
+
+\begin{figure}[htb]
+\centerline{\includegraphics[width=1.0\textwidth]{../tests/test1/prof.pdf}}
+\caption{Verification with analytical solution for advection diffusion equation: profile history. $Pe = v\Delta t/D$ is the grid Peclet number. The Courant number $Cr = v\Delta t\Delta x$ = 1.}
+\label{fig:test1prof}
+\end{figure}
+
+\subsection{Diffusion into a sphere with constant concentration at the surface}
+The analytical solution for diffusion into a sphere with constant surface concentration is \cite{Crank1975} 
+\begin{equation}
+\frac{c-c_i}{c_0-c_i} = 1 + \frac{2a}{\pi r} \sum_{n=1}^\infty \frac{(-1)^n}{n} \sin\frac{n\pi r}{a}\exp\left(\frac{Dn^2\pi^2t}{a^2}\right).
+\end{equation}
+where $c_i$ and $c_0$ are the initial and surface boundary concentration, $r$ is the distance from the center of the sphere, and $a$ is the radius of the sphere. For r = 0, 
+\begin{equation}
+\frac{c-c_i}{c_0-c_i} = 1 + 2 \sum_{n=1}^\infty (-1)^n \exp\left(\frac{Dn^2\pi^2t}{a^2}\right).
+\end{equation}
+
+For $a = 0.028$ cm, $D_e = 2\times 10^{-6}$ cm$^2$/s, we set the intial and inlet concentration at 1, and specify a fast flow rate 50 cm/s to keep the concentration at the surface of sphere at 1. The numerical solutions with discretizing the sphere with 10, 20, and 100 uniform radial distance are compared with the analytical solution in Fig. \ref{fig:test2prof}. The numerical solution gets close to the analytical solution when the discretization is fine. Coarse discretization results in additional numerical diffusion. 
+
+\begin{figure}[htb]
+\centerline{\includegraphics[width=1.0\textwidth]{../tests/test2/prof.pdf}}
+\caption{Verification with analytical solution for diffusion into a sphere: profile history.}
+\label{fig:test2prof}
+\end{figure}
 
 
 \bibliography{cxrt}{}
