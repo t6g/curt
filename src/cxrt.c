@@ -350,15 +350,19 @@ int main(int argc,char **args)
   tt = 0.0;
   nt = (int)(sim_duration / dt) + 1;
 
-  ierr = VecCreateSeq(PETSC_COMM_SELF, nt+1, &cbt); CHKERRQ(ierr);
-  ierr = VecSetFromOptions(cbt);
-  ierr = VecSet(cbt, 0.0); CHKERRQ(ierr);
-
   if (ntout > nt) nto = 1;
   else if (ntout <= 0) nto = -1;
   else nto = nt / ntout; 
 
+  /* set observation output, currently breakthrough curve */
   iobs[0] = nx - 1;
+
+  ierr = VecGetOwnershipRange(x, &Istart, &Iend); CHKERRQ(ierr);
+  if (Istart < iobs[0] && Iend > iobs[0]) {
+    ierr = VecCreateSeq(PETSC_COMM_SELF, nt+1, &cbt); CHKERRQ(ierr);
+    ierr = VecSetFromOptions(cbt);
+    ierr = VecSet(cbt, 0.0); CHKERRQ(ierr);
+  }
 
   iout = 0;  
   
@@ -404,14 +408,19 @@ int main(int argc,char **args)
   ierr = PetscViewerDestroy(&viewer); CHKERRQ(ierr);
 
   /* write breakthrough /observation file */
-  ierr = VecAssemblyBegin(cbt); CHKERRQ(ierr);
-  ierr = VecAssemblyEnd(cbt); CHKERRQ(ierr);
-  sprintf(filename, "%s_btc.h5", prefix);
-  ierr = PetscObjectSetName((PetscObject) cbt, "btc"); CHKERRQ(ierr);
-  ierr = PetscViewerHDF5Open(PETSC_COMM_WORLD,filename,FILE_MODE_WRITE,&viewer); CHKERRQ(ierr);
-  ierr = PetscViewerSetFromOptions(viewer); CHKERRQ(ierr);
-  ierr = VecView(cbt,viewer); CHKERRQ(ierr);
-  ierr = PetscViewerDestroy(&viewer); CHKERRQ(ierr);
+
+  ierr = VecGetOwnershipRange(x, &Istart, &Iend); CHKERRQ(ierr);
+  if (Istart < iobs[0] && Iend > iobs[0]) {
+    ierr = VecAssemblyBegin(cbt); CHKERRQ(ierr);
+    ierr = VecAssemblyEnd(cbt); CHKERRQ(ierr);
+    sprintf(filename, "%s_btc.h5", prefix);
+    ierr = PetscObjectSetName((PetscObject) cbt, "btc"); CHKERRQ(ierr);
+    ierr = PetscViewerHDF5Open(PETSC_COMM_SELF,filename,FILE_MODE_WRITE,&viewer); CHKERRQ(ierr);
+    ierr = PetscViewerSetFromOptions(viewer); CHKERRQ(ierr);
+    ierr = VecView(cbt,viewer); CHKERRQ(ierr);
+    ierr = PetscViewerDestroy(&viewer); CHKERRQ(ierr);
+    ierr = VecDestroy(&cbt);CHKERRQ(ierr);
+  }
 
   ierr = KSPDestroy(&ksp);CHKERRQ(ierr);
   ierr = VecDestroy(&eta); CHKERRQ(ierr);
