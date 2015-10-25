@@ -6,9 +6,9 @@
 # 4.0 bv/min = 4.0 * 15 / 60 / 0.65 = 1.5385
 # 5.0 bv/min = 5.0 * 15 / 60 / 0.65 = 1.9231
 ../../../src/cxrt -prefix bv02 -velocity 0.0769 -simulationduration 900.0 -nx 150 -nr 100 
-../../../src/cxrt -prefix bv04 -velocity 0.1538 -simulationduration 450.0 -nx 150 -nr 100 -restart bv02_150_100_restart.h5 
-../../../src/cxrt -prefix bv10 -velocity 0.3846 -simulationduration 180.0 -nx 150 -nr 100 -restart bv04_150_100_restart.h5 
-../../../src/cxrt -prefix bv20 -velocity 0.7692 -simulationduration  90.0 -nx 150 -nr 100 -restart bv10_150_100_restart.h5 
-../../../src/cxrt -prefix bv30 -velocity 1.1538 -simulationduration  60.0 -nx 150 -nr 100 -restart bv20_150_100_restart.h5 
-../../../src/cxrt -prefix bv40 -velocity 1.5385 -simulationduration  45.0 -nx 150 -nr 100 -restart bv30_150_100_restart.h5 
-../../../src/cxrt -prefix bv50 -velocity 1.9231 -simulationduration  36.0 -nx 150 -nr 100 -restart bv40_150_100_restart.h5 
+../../../src/cxrt -prefix bv04 -velocity 0.1538 -simulationduration 450.0 -nx 150 -nr 100 -restart bv02_150x100_restart.h5 
+../../../src/cxrt -prefix bv10 -velocity 0.3846 -simulationduration 180.0 -nx 150 -nr 100 -restart bv04_150x100_restart.h5 
+../../../src/cxrt -prefix bv20 -velocity 0.7692 -simulationduration  90.0 -nx 150 -nr 100 -restart bv10_150x100_restart.h5 
+../../../src/cxrt -prefix bv30 -velocity 1.1538 -simulationduration  60.0 -nx 150 -nr 100 -restart bv20_150x100_restart.h5 
+../../../src/cxrt -prefix bv40 -velocity 1.5385 -simulationduration  45.0 -nx 150 -nr 100 -restart bv30_150x100_restart.h5 
+../../../src/cxrt -prefix bv50 -velocity 1.9231 -simulationduration  36.0 -nx 150 -nr 100 -restart bv40_150x100_restart.h5 

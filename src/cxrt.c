@@ -83,6 +83,7 @@ int main(int argc,char **args)
   Vec            eta;
   Vec            sphere_cell_dvol;
   Vec            x,b;
+  Vec            cbt; /* breakthrough concentration */
   PetscScalar    *eta_p, *vol_p;
   Mat            A;       
   KSP            ksp;    
@@ -93,6 +94,8 @@ int main(int argc,char **args)
   char str[80], filename[80], prefix[80]="base";
   char restart_filename[80]="";
   PetscInt       iout, nto, ntout=10;
+  PetscInt       iobs[10];
+  PetscScalar    cobs[10];
 
   PetscInitialize(&argc,&args,(char*)0,help);
 
@@ -346,7 +349,17 @@ int main(int argc,char **args)
 
   tt = 0.0;
   nt = (int)(sim_duration / dt) + 1;
-  nto = nt / ntout; 
+
+  ierr = VecCreateSeq(PETSC_COMM_SELF, nt+1, &cbt); CHKERRQ(ierr);
+  ierr = VecSetFromOptions(cbt);
+  ierr = VecSet(cbt, 0.0); CHKERRQ(ierr);
+
+  if (ntout > nt) nto = 1;
+  else if (ntout <= 0) nto = -1;
+  else nto = nt / ntout; 
+
+  iobs[0] = nx - 1;
+
   iout = 0;  
   
   for (i = 0; i <= nt; i++){
@@ -358,6 +371,14 @@ int main(int argc,char **args)
     ierr = VecAssemblyBegin(b); CHKERRQ(ierr);
     ierr = VecAssemblyEnd(b); CHKERRQ(ierr);
     ierr = KSPSolve(ksp,b,x);CHKERRQ(ierr);
+
+    ierr = VecGetOwnershipRange(x, &Istart, &Iend); CHKERRQ(ierr);
+
+    if (Istart < iobs[0] && Iend > iobs[0]) {
+      ierr = VecGetValues(x, 1, iobs, cobs); CHKERRQ(ierr); 
+      ierr = VecSetValue(cbt, i, cobs[0], INSERT_VALUES); CHKERRQ(ierr);
+    }
+
     iout = iout + 1;
     tt = tt + dt;
 
@@ -374,11 +395,22 @@ int main(int argc,char **args)
 
   ierr = PetscViewerDestroy(&viewer); CHKERRQ(ierr);
 
+  /* write restart file */
   sprintf(filename, "%s_%dx%d_restart.h5", prefix, nx, nr);
   ierr = PetscObjectSetName((PetscObject) x, "restart"); CHKERRQ(ierr);
   ierr = PetscViewerHDF5Open(PETSC_COMM_WORLD,filename,FILE_MODE_WRITE,&viewer); CHKERRQ(ierr);
   ierr = PetscViewerSetFromOptions(viewer); CHKERRQ(ierr);
   ierr = VecView(x,viewer); CHKERRQ(ierr);
+  ierr = PetscViewerDestroy(&viewer); CHKERRQ(ierr);
+
+  /* write breakthrough /observation file */
+  ierr = VecAssemblyBegin(cbt); CHKERRQ(ierr);
+  ierr = VecAssemblyEnd(cbt); CHKERRQ(ierr);
+  sprintf(filename, "%s_btc.h5", prefix);
+  ierr = PetscObjectSetName((PetscObject) cbt, "btc"); CHKERRQ(ierr);
+  ierr = PetscViewerHDF5Open(PETSC_COMM_WORLD,filename,FILE_MODE_WRITE,&viewer); CHKERRQ(ierr);
+  ierr = PetscViewerSetFromOptions(viewer); CHKERRQ(ierr);
+  ierr = VecView(cbt,viewer); CHKERRQ(ierr);
   ierr = PetscViewerDestroy(&viewer); CHKERRQ(ierr);
 
   ierr = KSPDestroy(&ksp);CHKERRQ(ierr);
