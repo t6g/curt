@@ -413,7 +413,7 @@ int main(int argc,char **args)
   if (Istart < iobs[0] && Iend > iobs[0]) {
     ierr = VecAssemblyBegin(cbt); CHKERRQ(ierr);
     ierr = VecAssemblyEnd(cbt); CHKERRQ(ierr);
-    sprintf(filename, "%s_btc.h5", prefix);
+    sprintf(filename, "%s_%dx%dx%d_btc.h5", prefix, nx, nr, nt);
     ierr = PetscObjectSetName((PetscObject) cbt, "btc"); CHKERRQ(ierr);
     ierr = PetscViewerHDF5Open(PETSC_COMM_SELF,filename,FILE_MODE_WRITE,&viewer); CHKERRQ(ierr);
     ierr = PetscViewerSetFromOptions(viewer); CHKERRQ(ierr);
