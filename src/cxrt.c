@@ -55,7 +55,7 @@ int main(int argc,char **args)
   PetscReal ded0_sphere   = 0.2;      /* De/D0 in sphere                     */
   PetscReal dfd0          = 0.2;     /* Df/D0 Df as film diff coef          */
   PetscReal kp            = 2.5e5;    /* partition coefficient */
-  PetscReal cin           = 1.9941e-7;/* inlet concentration M */
+  PetscReal cin           = 1.0;      /* inlet concentration M */
   PetscReal cinit         = 0.0;      /* initial concentration in column  */
 
   PetscReal cfl_limiter   = 0.2;      /* limit cfl to determine dt for accuracy */        
