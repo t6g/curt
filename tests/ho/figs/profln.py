@@ -11,7 +11,7 @@ else:
   nx = 200
   nr  = 200
 
-cin = 1.9941e-07 #M
+cin = 1.0 #M
 kp  = 2.5e5
 length = 20.0
 radius = 0.028
