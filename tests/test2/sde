@@ -1,0 +1,19 @@
+../../src/cxrt \
+     -prefix sde \
+     -nx 5 \
+     -nr 100 \
+     -nt 20 \
+     -velocity 50.0 \
+     -diffusioncoefficient 1.0e-6 \
+     -DfD0 1.0 \
+     -DeD0sphere 1.0 \
+     -inletconcentration 1.0 \
+     -initialconcentration 1.0 \
+     -simulationduration 200.0 \
+     -kp 0.0 \
+     -noutput 20
+
+# vary nr 10, 20, and 100 to examine the impact of discretizatin of sphere
+# kp = 0 to simulate no sorption
+# initial and inlet concentration = 1 to simulate diffusion into spheres only
+# DfD0, DeD0sphere to make film and sphere diffusion coefficient to be the same as molecular diffusion coefficient 

@@ -1,0 +1,83 @@
+#!/bin/bash 
+#PBS -S /bin/bash 
+#PBS -m e 
+#PBS -M t6g@ornl.gov 
+#PBS -N he-1200x5000-f1 
+#PBS -j oe
+#PBS -e he-1200x5000.log
+#PBS -q esd13q 
+#PBS -l nodes=20:ppn=32,walltime=1000:00:00 
+
+cd $GLOBAL_SCRATCH
+
+# 0.2 bv/min = 0.2 * 15 / 60 / 0.65 = 0.0769
+time mpiexec -np 640 /home/t6g/hgs/cxrt/src/cxrt \
+                    -prefix bv02 \
+                    -velocity 0.0769 \
+                    -simulationduration 900.0 \
+                    -nx 1200 \
+                    -nr 5000 \
+                    -DfD0 0.01 
+
+# 0.4 bv/min = 0.4 * 15 / 60 / 0.65 = 0.1538
+time mpiexec -np 640 /home/t6g/hgs/cxrt/src/cxrt \
+                    -prefix bv04 \
+                    -velocity 0.1538 \
+                    -simulationduration 450.0 \
+                    -nx 1200 \
+                    -nr 5000 \
+                    -restart bv02_1200_5000_restart.h5 \
+                    -DfD0 0.01 
+
+# 1.0 bv/min = 1.0 * 15 / 60 / 0.65 = 0.3846
+time mpiexec -np 640 /home/t6g/hgs/cxrt/src/cxrt \
+                    -prefix bv10 \
+                    -velocity 0.3846 \
+                    -simulationduration 180.0 \
+                    -nx 1200 \
+                    -nr 5000 \
+                    -restart bv04_1200_5000_restart.h5 \
+                    -DfD0 0.01 
+
+# 2.0 bv/min = 2.0 * 15 / 60 / 0.65 = 0.7692
+time mpiexec -np 640 /home/t6g/hgs/cxrt/src/cxrt \
+                    -prefix bv20 \
+                    -velocity 0.7692 \
+                    -simulationduration  90.0 \
+                    -nx 1200 \
+                    -nr 5000 \
+                    -restart bv10_1200_5000_restart.h5 \
+                    -DfD0 0.01 
+
+# 3.0 bv/min = 3.0 * 15 / 60 / 0.65 = 1.1538
+time mpiexec -np 640 /home/t6g/hgs/cxrt/src/cxrt \
+                    -prefix bv30 \
+                    -velocity 1.1538 \
+                    -simulationduration  60.0 \
+                    -nx 1200 \
+                    -nr 5000 \
+                    -restart bv20_1200_5000_restart.h5 \
+                    -DfD0 0.01 
+
+# 4.0 bv/min = 4.0 * 15 / 60 / 0.65 = 1.5385
+time mpiexec -np 640 /home/t6g/hgs/cxrt/src/cxrt \
+                    -prefix bv40 \
+                    -velocity 1.5385 \
+                    -simulationduration 45.0 \
+                    -nx 1200 \
+                    -nr 5000 \
+                    -restart bv30_1200_5000_restart.h5 \
+                    -DfD0 0.01 
+
+# 5.0 bv/min = 5.0 * 15 / 60 / 0.65 = 1.9231
+time mpiexec -np 640 /home/t6g/hgs/cxrt/src/cxrt \
+                    -prefix bv50 \
+                    -velocity 1.9231 \
+                    -simulationduration  36.0 \
+                    -nx 1200 \
+                    -nr 5000 \
+                    -restart bv40_1200_5000_restart.h5 \
+                    -DfD0 0.01 
+
+cp *.h5 /home/t6g/hgs/cxrt/tests/he/1200x5000f1 
+
