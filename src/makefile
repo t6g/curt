@@ -6,3 +6,7 @@ cxfrt: cxfrt.o  chkopts
 	-${CLINKER} -o cxfrt cxfrt.o  ${PETSC_KSP_LIB}
 	${RM} cxfrt.o
 
+cxfrt: cxfrt.o  chkopts
+	-${CLINKER} -o cxfrt cxfrt.o  ${PETSC_KSP_LIB}
+	${RM} cxfrt.o
+

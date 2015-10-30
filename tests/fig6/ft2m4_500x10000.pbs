@@ -1,0 +1,31 @@
+#!/bin/bash 
+#PBS -S /bin/bash 
+#PBS -m e 
+#PBS -M t6g@ornl.gov 
+#PBS -N ft2m4_500x10000
+#PBS -j oe
+#PBS -e ft2m4.log
+#PBS -q esd13q 
+#PBS -l nodes=10:ppn=32,walltime=1000:00:00 
+
+cd $GLOBAL_SCRATCH
+
+# 0.1 bv/min = 0.2 * 15 / 60 / 0.65 = 0.0769
+time mpiexec -np 320 /home/t6g/hgs/cxrt/src/cxfrt \
+                    -prefix ft2m4 \
+                    -length 20.3 \
+                    -diameter 2.54 \
+                    -volumeresin 50.0 \
+                    -velocity 0.065835 \
+                    -simulationduration 864000.0 \
+                    -equalvolume true \
+                    -nx 500 \
+                    -nr 10000 \
+                    -nt 8640 \
+                    -noutput -1 \
+                    -kp 2.0e5 \
+                    -filmthickness 2.0e-4 \
+                    -tortuosity 0.2 
+
+cp *.h5 /home/t6g/hgs/cxrt/tests/fig6 
+
