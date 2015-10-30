@@ -6,9 +6,10 @@ static char help[] = "Solves one dimensional advection diffusion equation    \n\
     -diameter                    : column diameter, cm                       \n\
     -velocity                    : cm/s                                      \n\
     -dispersivity                : cm                                        \n\
-    -diffusioncoefficient        : D0, cm2/s                                 \n\
-    -DeD0                        : pore diffusion over D0                    \n\
-    -DfD0                        : film diffusion over D0                    \n\
+    -diffusioncoefficient        : Dm, cm2/s                                 \n\
+    -tortuositycolumn            :                                           \n\
+    -tortuosityresin             :                                           \n\
+    -filmthickness               : cm                                        \n\
     -inletconcentration          : inlet concentration                       \n\
     -initialconcentrationcolumn  : initial concentration                     \n\
                                                                                \
@@ -27,6 +28,7 @@ static char help[] = "Solves one dimensional advection diffusion equation    \n\
     -equalvolume                 : for sphere discretization                 \n\
     -displaymatrix               :                                           \n\
     -displayeta                  :                                           \n\
+    -echo                        :                                           \n\
     -correctnumericaldiffusion   :                                        \n\n"; 
 
 #include <petscksp.h>
@@ -50,10 +52,10 @@ int main(int argc,char **args)
   PetscReal radius_resin  = 0.028;    /* sphere radius, cm     */
   PetscReal theta_resin   = 0.50;     /* volumetric water content for resin  */
 
-  PetscReal diffusioncoef = 1.0e-5;   /* D0, molecular diffusion coef cm2/s */
-  PetscReal ded0_column   = 0.2;      /* De/D0 in column                     */
-  PetscReal ded0_sphere   = 0.2;      /* De/D0 in sphere                     */
-  PetscReal dfd0          = 0.2;     /* Df/D0 Df as film diff coef          */
+  PetscReal diffusioncoef = 1.0e-5;   /* Dm, molecular diffusion coef cm2/s */
+  PetscReal tortuosity_column = 0.2;  /* De/Dm in column                    */
+  PetscReal tortuosity_resin = 0.2;   /* De/Dm in sphere                     */
+  PetscReal filmthickness = 1.0e-3;   /* film thickness                      */
   PetscReal kp            = 2.5e5;    /* partition coefficient */
   PetscReal cin           = 1.0;      /* inlet concentration M */
   PetscReal cinit         = 0.0;      /* initial concentration in column  */
@@ -65,6 +67,7 @@ int main(int argc,char **args)
   PetscBool equalvolume  = PETSC_FALSE;
   PetscBool displaymatrix = PETSC_FALSE;
   PetscBool displayeta = PETSC_FALSE;
+  PetscBool echo = PETSC_TRUE;
 
   PetscInt  nx = 100, nr = 100, nt = 900; /* number of cells in column, and sphere */          
   PetscReal dx, dr, dt, tt;           /*  */
@@ -106,9 +109,9 @@ int main(int argc,char **args)
   ierr = PetscOptionsGetReal(NULL,"-diameter", &diameter, NULL); CHKERRQ(ierr);
   ierr = PetscOptionsGetReal(NULL,"-dispersivity", &dispersivity, NULL); CHKERRQ(ierr);
   ierr = PetscOptionsGetReal(NULL,"-diffusioncoefficient", &diffusioncoef, NULL); CHKERRQ(ierr);
-  ierr = PetscOptionsGetReal(NULL,"-DeD0column", &ded0_column, NULL); CHKERRQ(ierr);
-  ierr = PetscOptionsGetReal(NULL,"-DeD0sphere", &ded0_sphere, NULL); CHKERRQ(ierr);
-  ierr = PetscOptionsGetReal(NULL,"-DfD0", &dfd0, NULL); CHKERRQ(ierr);
+  ierr = PetscOptionsGetReal(NULL,"-tortuositycolumn", &tortuosity_column, NULL); CHKERRQ(ierr);
+  ierr = PetscOptionsGetReal(NULL,"-tortuosityresin", &tortuosity_resin, NULL); CHKERRQ(ierr);
+  ierr = PetscOptionsGetReal(NULL,"-filmthickness", &filmthickness, NULL); CHKERRQ(ierr);
   ierr = PetscOptionsGetReal(NULL,"-inletconcentration", &cin, NULL); CHKERRQ(ierr);
   ierr = PetscOptionsGetReal(NULL,"-initialconcentration", &cinit, NULL); CHKERRQ(ierr);
   ierr = PetscOptionsGetReal(NULL,"-kp", &kp, NULL); CHKERRQ(ierr);
@@ -135,6 +138,19 @@ int main(int argc,char **args)
 
   ierr = PetscOptionsGetBool(NULL,"-displayeta",&displayeta,NULL); CHKERRQ(ierr);
 
+  ierr = PetscOptionsGetBool(NULL,"-echo",&echo,NULL); CHKERRQ(ierr);
+
+  if (echo) {
+    PetscPrintf(PETSC_COMM_WORLD, "Length     = %10.3f cm\n", length);
+    PetscPrintf(PETSC_COMM_WORLD, "Radius     = %10.6f cm\n", radius_resin);
+    PetscPrintf(PETSC_COMM_WORLD, "Velocity   = %10.3f cm/s\n", velocity);
+    PetscPrintf(PETSC_COMM_WORLD, "Dm         = %10.3e cm2/s\n", diffusioncoef);
+    PetscPrintf(PETSC_COMM_WORLD, "Tortuosity = %10.3f \n", tortuosity_resin);
+    PetscPrintf(PETSC_COMM_WORLD, "Dispersivity = %10.3f \n", dispersivity);
+    PetscPrintf(PETSC_COMM_WORLD, "Filmthickness = %10.3e \n", filmthickness);
+    PetscPrintf(PETSC_COMM_WORLD, "Partitioncoef = %10.3e \n", kp);
+  }
+
   dx    = length/((float)nx);
 
   theta_m = 1.0 - volume_resin / (PETSC_PI * diameter * diameter / 4.0 * length); 
@@ -143,14 +159,14 @@ int main(int argc,char **args)
 
   alpha = velocity * dt / dx; 
 
-  Pe    = velocity * dx / (diffusioncoef * ded0_column + velocity * dispersivity);
+  Pe    = velocity * dx / (diffusioncoef * tortuosity_column + velocity * dispersivity);
   DnDe  = 0.5 * Pe * (1.0 + alpha); 
 
-  PetscPrintf(PETSC_COMM_WORLD, "velocity = %10.3f, dx = %10.3f, dt = %10.3f\n", velocity, dx, dt);
-  PetscPrintf(PETSC_COMM_WORLD, "D0 = %10.3e, De/D0column = %10.3f, De/D0sphere = %10.3f Df/D0 = %10.3f\n", diffusioncoef, ded0_column, ded0_sphere, dfd0);
-  PetscPrintf(PETSC_COMM_WORLD, "Pe = %10.3f, Cr = %10.3f, Dn/De = %10.3f\n", Pe, alpha, DnDe);
+  PetscPrintf(PETSC_COMM_WORLD, "Pe = %10.3f\n", Pe);
+  PetscPrintf(PETSC_COMM_WORLD, "Cr = %10.3f\n", alpha);
+  PetscPrintf(PETSC_COMM_WORLD, "Dn/De = %10.3f\n", DnDe);
 
-  beta  = (diffusioncoef * ded0_column + dispersivity * velocity) * dt / dx / dx;
+  beta  = (diffusioncoef * tortuosity_column + dispersivity * velocity) * dt / dx / dx;
 
   if (correct_nd) beta = beta * (1.0 - DnDe);
 
@@ -173,7 +189,7 @@ int main(int argc,char **args)
     ierr = VecSet(sphere_cell_dvol, dvol); CHKERRQ(ierr);
  
     dr = r - r * pow((1.0 - 1.0 / ((float)nr)), 1.0/3.0);
-    tmpreal = diffusioncoef * dfd0 * dt * area / (0.5 * dr);
+    tmpreal = diffusioncoef * tortuosity_resin * dt * area / (0.5 * (dr + filmthickness));
     
     gamma = tmpreal * num_bead_cell * theta_resin / theta_m / \
       (PETSC_PI * diameter * diameter / 4.0 * length / ((float)nx));
@@ -188,13 +204,13 @@ int main(int argc,char **args)
       area = 4.0 * PETSC_PI * r * r;
       tmpreal = dr;
       dr = r - pow(r * r * r - r3n, 1.0/3.0);
-      tmpreal = diffusioncoef * ded0_sphere * dt * area / (dr + tmpreal) * 2.0;
+      tmpreal = diffusioncoef * tortuosity_resin * dt * area / (dr + tmpreal) * 2.0;
       ierr = VecSetValue(eta, i+1, tmpreal, INSERT_VALUES); CHKERRQ(ierr);
     }
   } else {
     dr = r / ((float)nr);
     dvol = 4.0 * PETSC_PI * (r * r * r - (r - dr) * (r - dr) * (r - dr)) / 3.0;
-    tmpreal = diffusioncoef * dfd0 * dt * area / (0.5 * dr);
+    tmpreal = diffusioncoef * tortuosity_resin * dt * area / (0.5 * (dr + filmthickness));
 
     gamma = tmpreal * num_bead_cell * theta_resin / theta_m / \
       (PETSC_PI * diameter * diameter / 4.0 * length / ((float)nx));
@@ -207,7 +223,7 @@ int main(int argc,char **args)
       r = r - dr;
       area = 4.0 * PETSC_PI * r * r;        
       dvol = 4.0 * PETSC_PI * (r * r * r - (r - dr) * (r - dr) * (r - dr)) / 3.0;
-      tmpreal = diffusioncoef * ded0_sphere * dt * area / dr;
+      tmpreal = diffusioncoef * tortuosity_resin * dt * area / dr;
       ierr = VecSetValue(eta, i+1, tmpreal, INSERT_VALUES); CHKERRQ(ierr);
       ierr = VecSetValue(sphere_cell_dvol, i+1, dvol, INSERT_VALUES); CHKERRQ(ierr);
     }
@@ -219,7 +235,9 @@ int main(int argc,char **args)
   ierr = VecAssemblyEnd(sphere_cell_dvol); CHKERRQ(ierr);
 
   if (displayeta) { 
-    ierr = PetscPrintf(PETSC_COMM_WORLD, "alpha = %10.3f, beta = %10.3f, gamma = %10.3f\n", alpha, beta, gamma); CHKERRQ(ierr);
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "alpha = %10.3e\n", alpha); CHKERRQ(ierr);
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "beta = %10.3e\n", beta); CHKERRQ(ierr);
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "gamma = %10.3e\n", gamma); CHKERRQ(ierr);
     ierr = PetscPrintf(PETSC_COMM_WORLD, "eta = \n"); CHKERRQ(ierr);
     ierr = VecView(eta,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
     ierr = VecView(sphere_cell_dvol,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
